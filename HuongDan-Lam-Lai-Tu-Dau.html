@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>Hướng dẫn làm lại FlawFirst từ đầu</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f6f3ee;
+      color: #1f1a17;
+      font: 17px/1.6 "Segoe UI", "Be Vietnam Pro", sans-serif;
+    }
+    main {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 40px 28px 72px;
+      background: #fff;
+      min-height: 100vh;
+    }
+    h1 { font-size: 32px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.03em; }
+    h2 { font-size: 22px; margin: 36px 0 8px; color: #0e7c74; }
+    h3 { font-size: 17px; margin: 18px 0 6px; }
+    p { margin: 8px 0; }
+    .lead { color: #6f675f; margin-top: 0; }
+    ol, ul { margin: 8px 0 8px 1.2em; padding: 0; }
+    li { margin: 4px 0; }
+    code, pre {
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 14px;
+    }
+    code { background: #f6f3ee; padding: 1px 5px; border-radius: 4px; }
+    pre {
+      background: #1f1a17;
+      color: #f6f3ee;
+      padding: 14px 16px;
+      border-radius: 12px;
+      overflow: auto;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; }
+    th, td { text-align: left; vertical-align: top; border-bottom: 1px solid #e6dfd6; padding: 8px 10px; }
+    th { background: #e7f5f3; }
+    .note { background: #fff6e4; border-radius: 12px; padding: 12px 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Làm lại FlawFirst từ đầu</h1>
+  <p class="lead">Thứ tự chức năng, chưa làm Auth. Đọc file này trong Visual Studio: chuột phải → <strong>View in Browser</strong>. Cursor thì mở file rồi bấm preview, hoặc nháy đúp để mở bằng trình duyệt.</p>
+
+  <h2>Vì sao bỏ Auth trước</h2>
+  <p>Đăng ký, đăng nhập và JWT không cần cho đến khi các màn hình chính đã chạy. Bài đánh giá vẫn phải gắn với một người, nên vẫn tạo bảng <code>Users</code> và seed một tài khoản cố định. Mọi thao tác “của tôi” tạm dùng người đó, chưa đọc token.</p>
+
+  <h2>Thứ tự làm</h2>
+  <ol>
+    <li>Khung dự án, kết nối SQL Server, các bảng dùng chung.</li>
+    <li>Catalog: xem và tìm sản phẩm.</li>
+    <li>Reviews: viết, sửa, xóa bài.</li>
+    <li>Social: bình luận, vote, lưu, chia sẻ, theo dõi, báo cáo.</li>
+    <li>Admin: ngành hàng và kiểm duyệt. Phần khóa tài khoản để lại cùng Auth.</li>
+    <li>Auth làm sau cùng, rồi thay user cố định bằng user lấy từ token.</li>
+  </ol>
+
+  <h2>0. Khung dự án</h2>
+  <p>Cần .NET SDK 9 và SQL Server. Trong thư mục dự án:</p>
+  <pre>dotnet new sln -n FlawFirst
+dotnet new webapi -n FlawFirst.Api --use-controllers -f net9.0
+dotnet sln add FlawFirst.Api/FlawFirst.Api.csproj</pre>
+  <p>Trong <code>FlawFirst.Api</code> cài gói:</p>
+  <pre>dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 9.0.15
+dotnet add package Microsoft.EntityFrameworkCore.Design --version 9.0.15
+dotnet add package Swashbuckle.AspNetCore --version 7.3.2
+dotnet add package BCrypt.Net-Next --version 4.2.0</pre>
+  <p>BCrypt chưa dùng cho đến khi làm Auth, nhưng cột <code>PasswordHash</code> vẫn cần một chuỗi hash hợp lệ lúc seed. Swashbuckle giữ bản 7.3.2, không dùng bản 10.</p>
+  <p>Cài công cụ migration ở thư mục solution:</p>
+  <pre>dotnet new tool-manifest
+dotnet tool install dotnet-ef --version 9.0.15</pre>
+  <p>Trong <code>appsettings.json</code>:</p>
+  <pre>"ConnectionStrings": {
+  "DefaultConnection": "Server=localhost;Database=FlawFirstDb;Trusted_Connection=True;TrustServerCertificate=True;"
+}</pre>
+  <p>Profile <code>http</code> trong <code>launchSettings.json</code> lắng nghe <code>http://localhost:5068</code>.</p>
+  <p>Xếp thư mục theo chức năng. Lúc này chưa tạo thư mục Auth.</p>
+  <pre>Features/Catalog/    Controllers, Models, Services
+Features/Reviews/
+Features/Social/
+Features/Admin/
+Models/              bảng dùng chung
+Data/                DbContext, Migrations, DbSeeder
+Infrastructure/      lưu file, middleware
+Common/
+wwwroot/             giao diện</pre>
+  <p>Các class trong <code>Models</code> giữ namespace <code>FlawFirst.Api.Entities</code>. Đổi namespace này sau khi đã có migration sẽ khiến EF hiểu nhầm thành bảng mới.</p>
+
+  <h2>1. Bảng và database</h2>
+  <p>Tạo model trước, rồi DbContext, rồi migration. Chưa có API.</p>
+  <table>
+    <tr><th>Class</th><th>Việc của bảng</th></tr>
+    <tr><td>User</td><td>Id, FullName, Email, PasswordHash, Role, IsLocked, CreatedAt. Seed một người, ví dụ Nguyễn An.</td></tr>
+    <tr><td>Category</td><td>Tên ngành hàng, duy nhất.</td></tr>
+    <tr><td>Product</td><td>Tên, thương hiệu, mô tả, giá, ảnh, CategoryId.</td></tr>
+    <tr><td>Review</td><td>ProductId, UserId, Pros, Cons, Rating 1–5, IsAnonymous, IsHidden, số vote. Một người một bài cho một sản phẩm.</td></tr>
+    <tr><td>ReviewImage, Comment, ReviewVote, Bookmark, UserFollow, ReviewReport, ReportEvidence</td><td>Có thể tạo sẵn bảng ngay từ migration đầu để khỏi sửa schema nhiều lần. Phần xử lý để các bước sau.</td></tr>
+  </table>
+  <p>Trong <code>AppDbContext</code>, cấu hình unique email, unique tên ngành hàng, rating từ 1 đến 5, unique <code>(ProductId, UserId)</code> trên review. <code>ReviewReport.ReviewId</code> cho phép null để khi xóa bài, báo cáo vẫn còn.</p>
+  <pre>dotnet ef migrations add InitialCreate --project FlawFirst.Api --startup-project FlawFirst.Api
+dotnet build</pre>
+  <p class="note">Sau <code>migrations add</code> phải build lại. Chạy <code>dotnet run --no-build</code> ngay lúc đó sẽ dùng DLL cũ, báo không có migration, rồi seed lỗi vì chưa có bảng Users.</p>
+  <p>Lúc khởi động, gọi <code>Database.MigrateAsync()</code> rồi seed. Seeder chỉ chạy khi chưa có user. Hash mật khẩu mẫu bằng <code>BCrypt.HashPassword</code> dù chưa có màn đăng nhập. Phải <code>Add</code> hết sản phẩm, không chỉ những sản phẩm có review, nếu không EF bỏ qua sản phẩm không được gắn vào đồ thị.</p>
+
+  <h2>2. Catalog</h2>
+  <p>Làm trước vì mọi màn hình khác mở từ một sản phẩm. Các GET để khách xem, không cần đăng nhập.</p>
+  <ul>
+    <li><code>GET /api/products</code> — tìm theo tên, thương hiệu, ngành hàng. Lọc <code>categoryId</code>, <code>minPrice</code>, <code>maxPrice</code>. Sắp xếp <code>newest</code>, <code>rating</code>, <code>mostReviewed</code>.</li>
+    <li><code>GET /api/products/categories</code></li>
+    <li><code>GET /api/products/{id}</code> — kèm điểm trung bình, số bài từng sao, tổng số bài. Bài <code>IsHidden</code> không tính.</li>
+    <li><code>GET /api/products/{id}/reviews</code> — lọc theo sao, bài có ảnh, mới nhất.</li>
+    <li><code>GET /api/products/{id}/flaws</code> — phần Cons của bài 1–2 sao.</li>
+    <li><code>POST /api/products</code> — thêm sản phẩm chưa có trong danh mục. Tạm thời không kiểm tra token. Khi làm Auth thì gắn <code>[Authorize]</code>.</li>
+  </ul>
+  <p>Giao diện tương ứng: trang danh sách, ô tìm, chip ngành hàng, khoảng giá, trang chi tiết với khối hạn chế đặt phía trên danh sách bài.</p>
+  <p>Chạy và thử: mở Swagger, gọi tìm “Apple”, rồi mở chi tiết một sản phẩm có bài 1–2 sao và xem flaws có đúng phần Cons đó.</p>
+
+  <h2>3. Reviews</h2>
+  <p>Chỉ bắt đầu khi đã lấy được sản phẩm theo id.</p>
+  <ul>
+    <li><code>POST /api/reviews</code> — bắt buộc Pros và Cons riêng, rating 1–5, có thể kèm ảnh. Thiếu một phần thì 400. Đã có bài của cùng user trên sản phẩm đó thì 409.</li>
+    <li><code>GET /api/reviews/mine</code> — bài của user đang seed.</li>
+    <li><code>PUT</code> và <code>DELETE /api/reviews/{id}</code> — chỉ user đó được sửa hoặc xóa.</li>
+    <li><code>GET /api/reviews/{id}</code> — nếu ẩn danh thì tên là “Người dùng ẩn danh”, không trả email.</li>
+    <li><code>POST /api/reviews/uploads</code> — field <code>files</code>, tối đa 6 ảnh, mỗi ảnh 5MB, jpg, jpeg, png, gif, webp. Lưu dưới <code>wwwroot/uploads</code>.</li>
+  </ul>
+  <p>Trước khi lưu, lọc từ ngữ trên Pros và Cons. Không cấm token không dấu <code>lon</code>, <code>buoi</code>, <code>cac</code> vì chúng dính nhầm vào “lớn”, “buổi”, “các”.</p>
+  <p>UserId lấy từ user seed, viết một hàm <code>GetCurrentUserId()</code> trả về id đó. Khi làm Auth, chỉ việc đổi hàm này sang đọc claim, không sửa lại service.</p>
+  <p>Giao diện: menu <strong>Viết đánh giá</strong>, form số sao, Pros, Cons, ẩn danh, ảnh. Nếu user đã có bài cho sản phẩm thì mở form sửa.</p>
+
+  <h2>4. Social</h2>
+  <p>Cần có bài review trước.</p>
+  <ul>
+    <li>Bình luận, có thể ẩn danh.</li>
+    <li>Vote: một người một vote trên một bài. Bấm cùng loại thì gỡ, bấm loại kia thì đổi. Đếm lại tổng trong một transaction. Không vote bài của mình.</li>
+    <li>Lưu bài và lấy link chia sẻ.</li>
+    <li>Theo dõi người khác, không theo dõi chính mình.</li>
+    <li>Báo cáo bài, kèm lý do và ảnh, trạng thái bắt đầu là Pending.</li>
+  </ul>
+
+  <h2>5. Admin</h2>
+  <p>Làm sau Social vì kiểm duyệt đọc hàng đợi báo cáo.</p>
+  <ul>
+    <li>Thêm, sửa, xóa ngành hàng. Không xóa ngành hàng còn sản phẩm.</li>
+    <li>Sửa, xóa sản phẩm. Không xóa sản phẩm đã có bài.</li>
+    <li>Với báo cáo: ẩn bài, xóa bài, phạt, hoặc bỏ qua. Xóa bài thì giữ báo cáo và đặt <code>ReviewId</code> thành null. Phạt thì ẩn bài và khóa tác giả.</li>
+  </ul>
+  <p>Chưa làm đăng nhập nên chưa phân biệt role trên token. Tạm mở các API admin trong Development, hoặc kiểm tra user seed có <code>Role = Admin</code>. Màn hình khóa và mở tài khoản để cùng lúc với Auth, vì khóa chỉ có tác dụng khi đăng nhập bị từ chối.</p>
+
+  <h2>6. Auth, làm sau cùng</h2>
+  <p>Khi bốn chức năng trên đã chạy, thêm <code>Features/Auth</code>:</p>
+  <ul>
+    <li><code>POST /api/auth/register</code> và <code>POST /api/auth/login</code>, mật khẩu bằng BCrypt.</li>
+    <li>JWT hạn 7 ngày, claim NameIdentifier, Email, Role.</li>
+    <li>Gắn <code>[Authorize]</code> lên viết bài, sửa, xóa, social và tạo sản phẩm.</li>
+    <li>Đổi <code>GetCurrentUserId()</code> sang đọc claim. Tài khoản <code>IsLocked</code> không được cấp token.</li>
+  </ul>
+
+  <h2>Chạy để kiểm tra</h2>
+  <pre>dotnet build
+dotnet run --launch-profile http</pre>
+  <p>Log cần có dòng database đã sẵn sàng và <code>Now listening on: http://localhost:5068</code>. Swagger ở <code>/swagger</code>. Nếu build báo file exe đang bị khóa, tắt process <code>FlawFirst.Api</code> rồi build lại.</p>
+</main>
+</body>
+</html>

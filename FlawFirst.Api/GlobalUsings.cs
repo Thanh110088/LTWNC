@@ -1,0 +1,11 @@
+global using FlawFirst.Api.Features.Admin.Models;
+global using FlawFirst.Api.Features.Admin.Services;
+global using FlawFirst.Api.Features.Auth.Models;
+global using FlawFirst.Api.Features.Auth.Services;
+global using FlawFirst.Api.Features.Catalog.Models;
+global using FlawFirst.Api.Features.Catalog.Services;
+global using FlawFirst.Api.Features.Reviews.Models;
+global using FlawFirst.Api.Features.Reviews.Services;
+global using FlawFirst.Api.Features.Social.Models;
+global using FlawFirst.Api.Features.Social.Services;
+global using FlawFirst.Api.Infrastructure;

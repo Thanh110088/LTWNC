@@ -1,0 +1,35 @@
+@base = http://localhost:5068
+
+### Health
+GET {{base}}/health
+
+### FR01 + FR02 search
+GET {{base}}/api/products?keyword=Apple&sort=rating&minPrice=1000000&maxPrice=30000000
+
+### FR03 detail
+GET {{base}}/api/products/1
+
+### FR04 reviews with images
+GET {{base}}/api/products/1/reviews?hasImages=true&sort=newest
+
+### FR05 flaws
+GET {{base}}/api/products/1/flaws
+
+### FR16 login
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@flawfirst.local",
+  "password": "User@123"
+}
+
+### FR16 register
+POST {{base}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Phạm Demo",
+  "email": "demo@flawfirst.local",
+  "password": "Demo@123"
+}
