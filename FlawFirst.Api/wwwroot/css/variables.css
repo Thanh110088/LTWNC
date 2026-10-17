@@ -1,0 +1,22 @@
+:root {
+  --bg: #f6f3ee;
+  --bg-2: #efeae3;
+  --surface: #ffffff;
+  --ink: #1f1a17;
+  --muted: #6f675f;
+  --line: #e6dfd6;
+  --teal: #0e7c74;
+  --teal-dark: #0b635c;
+  --teal-soft: #e7f5f3;
+  --amber: #a16207;
+  --amber-soft: #fff6e4;
+  --pros: #1b7a4a;
+  --pros-soft: #e8f6ee;
+  --cons: #c2410c;
+  --cons-soft: #fff1e8;
+  --danger: #b42318;
+  --danger-soft: #fdecec;
+  --shadow: 0 12px 32px rgba(70, 52, 32, 0.06);
+  --radius: 18px;
+  --font: "Be Vietnam Pro", "Segoe UI", sans-serif;
+}

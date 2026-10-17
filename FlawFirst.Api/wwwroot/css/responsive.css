@@ -1,0 +1,38 @@
+@media (max-width: 900px) {
+  .hero, .layout, .grid, .split, .pair {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+
+  .search {
+    order: 3;
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  .nav {
+    margin-left: 0;
+    gap: 4px;
+  }
+
+  .nav a, .userchip {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .footer {
+    flex-wrap: wrap;
+  }
+
+  .hero-copy h1 {
+    font-size: 30px;
+  }
+
+  .wrap {
+    width: min(1120px, calc(100% - 20px));
+  }
+}

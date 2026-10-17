@@ -1,0 +1,247 @@
+/* Hero section */
+.hero {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 22px;
+  margin-bottom: 22px;
+}
+
+.hero-copy h1 {
+  margin: 0 0 8px;
+  font-size: 40px;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+}
+
+.hero-copy p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 560px;
+}
+
+.hero-panel {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hero-panel strong {
+  font-size: 15px;
+}
+
+.pill-pros, .pill-cons {
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 13px;
+}
+
+.pill-pros {
+  background: var(--pros-soft);
+  color: var(--pros);
+}
+
+.pill-cons {
+  background: var(--cons-soft);
+  color: var(--cons);
+}
+
+/* Forms & Filters */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+  margin: 8px 0 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 140px;
+}
+
+.field.grow {
+  flex: 1;
+}
+
+.field span, .label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+input, select, textarea {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #8fc9c4;
+  box-shadow: 0 0 0 4px rgba(14, 124, 116, 0.12);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Product Card & Picker */
+.product {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 250px;
+  transition: transform 0.15s ease;
+}
+
+.product:hover {
+  transform: translateY(-2px);
+}
+
+.product > a.cover {
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.product .write-link {
+  margin: 0 16px 16px;
+  align-self: flex-start;
+}
+
+.product-body, .pad {
+  padding: 16px;
+}
+
+.pick {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: white;
+}
+
+.pick:hover {
+  border-color: #8fc9c4;
+}
+
+/* Flaw List & Reviews */
+.flaw-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.flaw {
+  background: var(--cons-soft);
+  border: 1px solid #f3d2c3;
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.flaw p {
+  margin: 6px 0 0;
+}
+
+.review {
+  padding: 16px;
+}
+
+.review-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.actions button, .linkish {
+  background: #faf7f3;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 11px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.actions button.on {
+  background: var(--teal-soft);
+  border-color: #b7e0dc;
+  color: var(--teal-dark);
+}
+
+/* Comments */
+.comments {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comment {
+  background: #faf7f3;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.comment form, .inline-form {
+  display: flex;
+  gap: 8px;
+}
+
+.inline-form input, .comment input {
+  flex: 1;
+}
+
+/* Auth Card */
+.auth-card {
+  max-width: 440px;
+  margin: 24px auto;
+  padding: 28px;
+}
+
+.auth-card h1 {
+  margin-top: 0;
+}
+
+/* Admin */
+.admin-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-card {
+  padding: 16px;
+}
+
+.admin-card h3 {
+  margin-top: 0;
+}
+
+.hidden-note {
+  font-size: 13px;
+}
